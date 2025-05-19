@@ -1,0 +1,41 @@
+services:
+  spark-master:
+    container_name: spark-master
+    build:
+      dockerfile: dockerfile
+      context: .
+    image: spark-image
+    entrypoint: ['./entryscript.sh', 'master']
+    volumes:
+      - ./data:/opt/spark/data
+      - ./spark_apps:/opt/spark/apps
+    env_file:
+      - .env.spark
+    ports:
+      - '9090:8080'
+      - '9870:9870'
+      - '7077:7077'
+      - '8088:8088'
+
+  spark-worker:
+    # container_name: da-spark-worker
+    image: spark-image
+    entrypoint: ['./entryscript.sh', 'worker']
+    depends_on:
+      - spark-master
+    env_file:
+      - .env.spark
+    volumes:
+      - ./data:/opt/spark/data
+      - ./spark_apps:/opt/spark/apps
+
+  history-server:
+    container_name: spark-history
+    image: spark-image
+    entrypoint: ['./entryscript.sh', 'history']
+    depends_on:
+      - spark-master
+    env_file:
+      - .env.spark
+    ports:
+      - '18080:18080'
