@@ -1,0 +1,9 @@
+dotenv
+ipykernel
+pyspark
+ipython
+pandas
+pyarrow
+numpy
+matplotlib
+seaborn
