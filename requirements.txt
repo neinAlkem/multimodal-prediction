@@ -7,3 +7,5 @@ pyarrow
 numpy
 matplotlib
 seaborn
+fsspec
+gcsfs
