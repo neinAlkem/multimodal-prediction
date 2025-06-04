@@ -7,7 +7,7 @@ RUN apt-get update && \
     vim \                 
     unzip \               
     rsync \               
-    openjdk-11-jdk \      
+    openjdk-8-jdk \      
     build-essential \     
     software-properties-common \ 
     ssh && \              
@@ -17,6 +17,8 @@ RUN apt-get update && \
 # Set environment variables for Spark and Hadoop
 ENV SPARK_HOME=${SPARK_HOME:-"/opt/spark"}
 ENV HADOOP_HOME=${HADOOP_HOME:-"/opt/hadoop"}
+ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Create necessary directories for Spark and Hadoop
 RUN mkdir -p ${HADOOP_HOME} && mkdir -p ${SPARK_HOME}
