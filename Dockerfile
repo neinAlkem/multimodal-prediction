@@ -1,5 +1,5 @@
 # Use a lightweight Python 3.11 image based on Debian Bullseye as the base image
-FROM python:3.11-slim-bullseye as spark-base
+FROM python:3.13-slim-bullseye as spark-base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     sudo \                
@@ -7,18 +7,19 @@ RUN apt-get update && \
     vim \                 
     unzip \               
     rsync \               
-    openjdk-8-jdk \      
+    openjdk-11-jdk \      
     build-essential \     
     software-properties-common \ 
     ssh && \              
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* 
 
+ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
 # Set environment variables for Spark and Hadoop
 ENV SPARK_HOME=${SPARK_HOME:-"/opt/spark"}
 ENV HADOOP_HOME=${HADOOP_HOME:-"/opt/hadoop"}
-ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
-ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Create necessary directories for Spark and Hadoop
 RUN mkdir -p ${HADOOP_HOME} && mkdir -p ${SPARK_HOME}
