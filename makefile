@@ -1,6 +1,5 @@
 build:
-	pip install -r requirements.txt
-	docker compose build
+	docker compose build --no-cache
 down:
 	docker compose down --volumes
 run-scaled:
