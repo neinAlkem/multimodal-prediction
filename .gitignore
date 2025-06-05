@@ -3,4 +3,5 @@ credentials/
 .env.spark
 dataset/
 test-fusion.sh
+notebook/catboost_info
 
