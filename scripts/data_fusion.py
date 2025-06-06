@@ -31,7 +31,8 @@ def process_survey(spark:SparkSession, survey_gcs:str, participat_info_gsc:str, 
                                     header=True,
                                     inferSchema=True)
     except Exception as e:
-        print(f'Error reading data from GCS : {e}')
+        logging.error(f'Error reading data from GCS : {e}')
+        raise
         
 # ---------------------------------------------------------------------------- #
 #                        Early Process for Student Data                        #
