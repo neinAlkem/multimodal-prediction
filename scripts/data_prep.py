@@ -13,6 +13,9 @@ def data_prep(spark:SparkSession, data_gcs:str) -> DataFrame :
     logging.info(f"Starting Data Preparation Process...")
     logging.info(f"Path info: {data_gcs}")
 
+# ---------------------------------------------------------------------------- #
+#                                   Load Data                                  #
+# ---------------------------------------------------------------------------- #
     logging.info(f"Loading Dataset from GCS..")
     try:
         df = spark.read.csv(data_gcs,  
@@ -22,6 +25,9 @@ def data_prep(spark:SparkSession, data_gcs:str) -> DataFrame :
         logging.error(f'Error reading data from GCS : {e}')
         raise
         
+# ---------------------------------------------------------------------------- #
+#                       Label Encode Categorical Columns                       #
+# ---------------------------------------------------------------------------- #
     df = df.na.replace(['Engaged','Not Engaged'], 
                        ['Highly Engaged','Engaged'], 'engagement_level')
     
@@ -29,7 +35,10 @@ def data_prep(spark:SparkSession, data_gcs:str) -> DataFrame :
     for col in categorical_columns:
         indexer = StringIndexer(inputCol=col, outputCol=f'{col}_index')
         df = indexer.fit(df).transform(df)
-    
+
+# ---------------------------------------------------------------------------- #
+#                     Splitting Training and Testing Dataset                    #
+# ---------------------------------------------------------------------------- #
     train_data, test_data = df.randomSplit([0.8, 0.2], seed=123)
     
     return train_data, test_data
