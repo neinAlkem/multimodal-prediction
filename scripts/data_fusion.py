@@ -5,13 +5,13 @@ import sys
 from functools import reduce
 import logging
 
-def process_survey(spark:SparkSession, survey_gcs:str, participat_info_gsc:str, class_table_gcs:str) -> DataFrame:
-    
-    logging.basicConfig( format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
+logging.basicConfig( format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.DEBUG)
     
-    logging.info(f"Starting process...")
+def process_survey(spark:SparkSession, survey_gcs:str, participat_info_gsc:str, class_table_gcs:str) -> DataFrame:
+        
+    logging.info(f"Begin Processing Survey Data...")
     logging.info(f"Path info: {participat_info_gsc}")
     logging.info(f"Path survey: {survey_gcs}")
     logging.info(f"Path Class Table: {class_table_gcs}")
@@ -180,20 +180,24 @@ def process_wearable_data(spark:SparkSession, wearable_gcs:str) -> DataFrame:
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.DEBUG)
     
-    logging.info('Starting process wearabled data...')
+    logging.info(f"Begin Processing Wearabale Device Data...")
+    logging.info(f"Path info: {wearable_gcs}")
     
     schema = types.StructType([
         types.StructField('value', types.FloatType(), True),
         types.StructField('Time', types.TimestampType(), True)
     ])
-
-    logging.info('Loading Dataset from GCS..')
-    hr = spark.read.schema(schema).csv(wearable_gcs + '/*/*/HR.csv')
-    temp = spark.read.schema(schema).csv(wearable_gcs + '/*/*/TEMP.csv')
-    eda = spark.read.schema(schema).csv(wearable_gcs + '/*/*/EDA.csv')
-    ibi = spark.read.schema(schema).csv(wearable_gcs + '/*/*/IBI.csv')
-    bvp = spark.read.schema(schema).csv(wearable_gcs + '/*/*/BVP.csv')
     
+    logging.info(f"Loading Dataset from GCS..")
+    try: 
+        hr = spark.read.schema(schema).csv(wearable_gcs + '/*/*/HR.csv')
+        temp = spark.read.schema(schema).csv(wearable_gcs + '/*/*/TEMP.csv')
+        eda = spark.read.schema(schema).csv(wearable_gcs + '/*/*/EDA.csv')
+        ibi = spark.read.schema(schema).csv(wearable_gcs + '/*/*/IBI.csv')
+        bvp = spark.read.schema(schema).csv(wearable_gcs + '/*/*/BVP.csv')
+    except Exception as e :
+           print(f'Error reading data from GCS : {e}')
+           
     logging.info('Starting Early Preprocess..')
     def extract_id(df):
         df = df.withColumn('class_id', F.regexp_extract(F.input_file_name(),r'class_wearable_data/(\d+)/',1).cast('int'))
@@ -253,9 +257,9 @@ if __name__ == "__main__":
     wearable_data_gcs = sys.argv[5]
     fusion_data_gcs = sys.argv[6]
     
-    spark = SparkSession.builder.appName('data_fusioning_pipeline').getOrCreate()
+    spark = SparkSession.builder.appName('data_pipeline').getOrCreate()
     
-    print(f'Spark Session Started. Using Projec: {project_id_env}')
+    print(f'Spark Session Started. Using Project: {project_id_env}')
     print(f'Participans Info Dir: {participant_info_gcs}')
     print(f'Participant Survey Dir: {survey_info_gcs}')
     print(f'Class Table Dir: {class_table_gcs}')
