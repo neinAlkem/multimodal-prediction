@@ -4,6 +4,9 @@ from pyspark.sql import functions as F
 import sys
 from functools import reduce
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig( format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
@@ -258,7 +261,21 @@ if __name__ == "__main__":
     wearable_data_gcs = sys.argv[5]
     fusion_data_gcs = sys.argv[6]
     
-    spark = SparkSession.builder.appName('data_pipeline').getOrCreate()
+    spark = SparkSession \
+    .builder \
+    .master('spark://localhost:7077') \
+    .config("spark.jars.packages", "com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.36.1") \
+    .config("spark.jars", "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar") \
+    .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
+    .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS") \
+    .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
+     .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
+     .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS") \
+     .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
+     .config("spark.hadoop.google.cloud.auth.type", "SERVICE_ACCOUNT_JSON_KEYFILE") \
+     .config("spark.hadoop.fs.gs.project.id", os.getenv('PROJECT_ID')) \
+     .appName("project_spark") \
+     .getOrCreate()
     
     print(f'Spark Session Started. Using Project: {project_id_env}')
     print(f'Participans Info Dir: {participant_info_gcs}')
@@ -267,25 +284,34 @@ if __name__ == "__main__":
     print(f'Class Wearable Data Dir: {wearable_data_gcs}')
     print(f'Fusion Output: {fusion_data_gcs}')
     
-    df_survey = process_survey(spark, 
-                               survey_info_gcs,
-                               participant_info_gcs,
-                               class_table_gcs)
-    
-    df_wearable = process_wearable_data(spark,
-                                        wearable_data_gcs)
-    
-    df_survey = df_survey.withColumnsRenamed({'time':'time_survey','class_id':'class_id_survey'})
-    
-    join_expr = (
-    (df_wearable['class_id'] == df_survey['class_id_survey']) &
-    (df_wearable['participant_id'] == df_survey['student_id']) &
-    (df_wearable['time_format'] == df_survey['time_survey'])
-    )   
-    
-    df_join = df_wearable.join(df_survey, join_expr, how='inner')
-    
-    print(f"Saving final fused data as CSV to: {fusion_data_gcs}")
-    df_join.coalesce(1).write.mode("overwrite").option("header", "true").csv(fusion_data_gcs)
-    print("Data saved successfully to GCS as CSV.")
+    try:
+        df_survey = process_survey(spark, 
+                                   survey_info_gcs,
+                                   participant_info_gcs,
+                                   class_table_gcs)
+
+        df_wearable = process_wearable_data(spark,
+                                            wearable_data_gcs)
+
+        df_survey = df_survey.withColumnsRenamed({'time':'time_survey','class_id':'class_id_survey'})
+
+        join_expr = (
+        (df_wearable['class_id'] == df_survey['class_id_survey']) &
+        (df_wearable['participant_id'] == df_survey['student_id']) &
+        (df_wearable['time_format'] == df_survey['time_survey'])
+        )   
+
+        df_join = df_wearable.join(df_survey, join_expr, how='inner')
+        df_join = df_join.toPandas()
+
+        print(f"Saving final fused data as CSV to: {fusion_data_gcs}")
+        df_join.to_csv(fusion_data_gcs, 
+                             index=False, 
+                             header=True, 
+                             mode='w')
+        print("Data saved successfully to GCS as CSV.")
+    except Exception as e:
+        logging.error(f'Error during data fusion process: {e}')
+    finally:
+        spark.stop()
 
