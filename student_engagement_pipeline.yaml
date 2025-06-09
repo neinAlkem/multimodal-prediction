@@ -1,0 +1,207 @@
+# PIPELINE DEFINITION
+# Name: end-to-end-student-engagement-pipeline
+# Description: A pipeline that fuses data, prepares it, and trains a model.
+# Inputs:
+#    base_dir: str [Default: 'gs://project-abd']
+#    project_id: str [Default: 'project-big-data-461104']
+components:
+  comp-data-fusion:
+    executorLabel: exec-data-fusion
+    inputDefinitions:
+      parameters:
+        class_table:
+          parameterType: STRING
+        participant_info:
+          parameterType: STRING
+        survey_info:
+          parameterType: STRING
+        wearable_data:
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        fused_data_path:
+          parameterType: STRING
+  comp-data-preparation:
+    executorLabel: exec-data-preparation
+    inputDefinitions:
+      parameters:
+        input_path:
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        test_output_path:
+          parameterType: STRING
+        train_output_path:
+          parameterType: STRING
+  comp-model-training:
+    executorLabel: exec-model-training
+    inputDefinitions:
+      parameters:
+        depth:
+          defaultValue: 4.0
+          isOptional: true
+          parameterType: NUMBER_INTEGER
+        iterations:
+          defaultValue: 300.0
+          isOptional: true
+          parameterType: NUMBER_INTEGER
+        l2_leaf_reg:
+          defaultValue: 3.0
+          isOptional: true
+          parameterType: NUMBER_INTEGER
+        learning_rate:
+          defaultValue: 0.01
+          isOptional: true
+          parameterType: NUMBER_DOUBLE
+        test_data:
+          parameterType: STRING
+        train_data:
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        metrics_path:
+          parameterType: STRING
+        model_dir:
+          parameterType: STRING
+deploymentSpec:
+  executors:
+    exec-data-fusion:
+      container:
+        command:
+        - python3
+        - /app/src/data_process/data_fusion.py
+        - --participant-info
+        - '{{$.inputs.parameters[''participant_info'']}}'
+        - --survey-info
+        - '{{$.inputs.parameters[''survey_info'']}}'
+        - --class-table
+        - '{{$.inputs.parameters[''class_table'']}}'
+        - --wearable-data
+        - '{{$.inputs.parameters[''wearable_data'']}}'
+        - --output-path
+        - '{{$.outputs.parameters[''fused_data_path''].output_file}}'
+        image: gcr.io/project-big-data-461104/spark-runner:latest
+        resources:
+          cpuLimit: 1.5
+          memoryLimit: 6.0
+          resourceCpuLimit: '1.5'
+          resourceMemoryLimit: 6G
+    exec-data-preparation:
+      container:
+        command:
+        - python3
+        - /app/src/data_process/data_prep.py
+        - --input-path
+        - '{{$.inputs.parameters[''input_path'']}}'
+        - --train-output-path
+        - '{{$.outputs.parameters[''train_output_path''].output_file}}'
+        - --test-output-path
+        - '{{$.outputs.parameters[''test_output_path''].output_file}}'
+        image: gcr.io/project-big-data-461104/spark-runner:latest
+        resources:
+          cpuLimit: 1.5
+          memoryLimit: 6.0
+          resourceCpuLimit: '1.5'
+          resourceMemoryLimit: 6G
+    exec-model-training:
+      container:
+        command:
+        - python3
+        - /app/src/model/model_training.py
+        - --train-data
+        - '{{$.inputs.parameters[''train_data'']}}'
+        - --test-data
+        - '{{$.inputs.parameters[''test_data'']}}'
+        - --model-output-dir
+        - '{{$.outputs.parameters[''model_dir''].output_file}}'
+        - --metrics-output-path
+        - '{{$.outputs.parameters[''metrics_path''].output_file}}'
+        - --iterations
+        - '{{$.inputs.parameters[''iterations'']}}'
+        - --learning-rate
+        - '{{$.inputs.parameters[''learning_rate'']}}'
+        - --depth
+        - '{{$.inputs.parameters[''depth'']}}'
+        - --l2-leaf-reg
+        - '{{$.inputs.parameters[''l2_leaf_reg'']}}'
+        image: gcr.io/project-big-data-461104/spark-runner:latest
+        resources:
+          cpuLimit: 1.0
+          memoryLimit: 4.0
+          resourceCpuLimit: '1'
+          resourceMemoryLimit: 4G
+pipelineInfo:
+  description: A pipeline that fuses data, prepares it, and trains a model.
+  name: end-to-end-student-engagement-pipeline
+root:
+  dag:
+    tasks:
+      data-fusion:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-data-fusion
+        inputs:
+          parameters:
+            class_table:
+              runtimeValue:
+                constant: '{{$.inputs.parameters[''pipelinechannel--base_dir'']}}/raw/participant_class_info/'
+            participant_info:
+              runtimeValue:
+                constant: '{{$.inputs.parameters[''pipelinechannel--base_dir'']}}/raw/participant_class_info/'
+            pipelinechannel--base_dir:
+              componentInputParameter: base_dir
+            survey_info:
+              runtimeValue:
+                constant: '{{$.inputs.parameters[''pipelinechannel--base_dir'']}}/raw/survey/'
+            wearable_data:
+              runtimeValue:
+                constant: '{{$.inputs.parameters[''pipelinechannel--base_dir'']}}/raw/class_wearable_data/'
+        taskInfo:
+          name: data-fusion
+      data-preparation:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-data-preparation
+        dependentTasks:
+        - data-fusion
+        inputs:
+          parameters:
+            input_path:
+              taskOutputParameter:
+                outputParameterKey: fused_data_path
+                producerTask: data-fusion
+        taskInfo:
+          name: data-preparation
+      model-training:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-model-training
+        dependentTasks:
+        - data-preparation
+        inputs:
+          parameters:
+            test_data:
+              taskOutputParameter:
+                outputParameterKey: test_output_path
+                producerTask: data-preparation
+            train_data:
+              taskOutputParameter:
+                outputParameterKey: train_output_path
+                producerTask: data-preparation
+        taskInfo:
+          name: model-training
+  inputDefinitions:
+    parameters:
+      base_dir:
+        defaultValue: gs://project-abd
+        isOptional: true
+        parameterType: STRING
+      project_id:
+        defaultValue: project-big-data-461104
+        isOptional: true
+        parameterType: STRING
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.13.0
