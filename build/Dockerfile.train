@@ -1,0 +1,11 @@
+FROM python:3.9-slim
+
+RUN pip install \
+    pandas \
+    scikit-learn \
+    catboost \
+    google-cloud-storage \
+    gcsfs
+
+WORKDIR /app
+COPY ../../src /app/src

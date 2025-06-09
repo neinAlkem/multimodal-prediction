@@ -1,0 +1,12 @@
+FROM openjdk:8-slim
+
+RUN apt-get update && apt-get install -y python3 python3-pip
+
+RUN pip3 install \
+    pyspark==3.3.0 \
+    gcsfs \
+    pandas \
+    python-dotenv
+
+WORKDIR /app
+COPY ../../src /app/src
