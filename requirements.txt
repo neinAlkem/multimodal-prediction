@@ -11,5 +11,6 @@ fsspec
 gcsfs
 kfp
 google_cloud_pipeline_components
-tensorflow
 scikit-learn
+kfp==1.8.22
+google-cloud-storage
