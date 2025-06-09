@@ -11,5 +11,4 @@ fsspec
 gcsfs
 kfp
 google_cloud_pipeline_components
-tensorflow
 scikit-learn
