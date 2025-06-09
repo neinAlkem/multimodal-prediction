@@ -6,4 +6,6 @@ test-fusion.sh
 notebook/catboost_info
 data/
 spark_apps/
+google-cloud-sdk
+.vscode
 
