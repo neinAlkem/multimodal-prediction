@@ -6,6 +6,7 @@ from catboost import CatBoostClassifier, Pool
 from sklearn.metrics import accuracy_score, classification_report
 from google.cloud import storage
 from sklearn.preprocessing import StandardScaler
+import json
 
 logging.basicConfig( format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
@@ -89,12 +90,20 @@ def main(args):
     logging.info(f"Akurasi Model Final: {accuracy:.4f}")
     logging.info(f"Laporan Klasifikasi:\n{report}")
     
+    metrics_filename = 'evaluation_metrics.json'
+    with open(metrics_filename, 'w') as f:
+        json.dump(report, f, indent=4)
+    logging.info(f"Evaluation metrics saved to {metrics_filename}")
+    
     logging.info('Saving Model Artefact...')
     model_filename = 'model.cbm'
     model.save_model(model_filename)
     
     logging.info("Uploading Model to GCS...")
     upload_to_gcs(model_filename, os.path.join(args.model_output_dir, "model.cbm"))
+    
+    logging.info("Uploading evaluation metrics to GCS...")
+    upload_to_gcs(metrics_filename, args.metrics_output_path)
     logging.info("Success...")
 
 if __name__ == '__main__':    
