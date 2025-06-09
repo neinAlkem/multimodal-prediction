@@ -8,7 +8,7 @@ from google.cloud import storage
 from sklearn.preprocessing import StandardScaler
 import json
 
-logging.basicConfig( format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
+logging.basicConfig(format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.DEBUG)
 
@@ -54,9 +54,12 @@ def main(args):
     x_test = test_data.drop(target_column, axis=1)
     y_test = test_data[target_column]
     
+    x_train_numeric = x_train.select_dtypes(include=['number'])
+    x_test_numeric = x_test[x_train_numeric.columns]
+    
     scaler = StandardScaler()
-    x_train_scaled = scaler.fit_transform(x_train)
-    x_test_scaled = scaler.transform(x_test)
+    x_train_scaled = scaler.fit_transform(x_train_numeric)
+    x_test_scaled = scaler.transform(x_test_numeric)
     
     logging.info('Creating Catboost Pool...')
     train_pool = Pool(
@@ -70,7 +73,7 @@ def main(args):
     
     logging.info('Training Model..')
     model = CatBoostClassifier(
-        iterations=args.iteration,
+        iterations=args.iterations,
         learning_rate=args.learning_rate,
         depth=args.depth,
         l2_leaf_reg=args.l2_leaf_reg,
@@ -83,7 +86,7 @@ def main(args):
               eval_set=test_pool)
     
     logging.info('Evaluating Model...')
-    y_pred = model.predict(x_test)
+    y_pred = model.predict(x_test_scaled)
     accuracy = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred)
     
@@ -103,14 +106,15 @@ def main(args):
     upload_to_gcs(model_filename, os.path.join(args.model_output_dir, "model.cbm"))
     
     logging.info("Uploading evaluation metrics to GCS...")
-    upload_to_gcs(metrics_filename, args.metrics_output_path)
+    upload_to_gcs(metrics_filename, os.path.join(args.metric_output_dir,'metrics,json'))
     logging.info("Success...")
 
 if __name__ == '__main__':    
     parser = argparse.ArgumentParser()
     parser.add_argument('--train-data', type=str, required=True, help='GCS path to training data.')
     parser.add_argument('--test-data', type=str, required=True, help='GCS path to testing data.')
-    parser.add_argument('--model-output-dir', type=str, required=True, help='GCS path to save trained data.')
+    parser.add_argument('--model-output-dir', type=str, required=True, help='GCS path to save model')
+    parser.add_argument('--metric-output-dir', type=str, required=True, help='GCS path to save model evaluation.')
     
     parser.add_argument('--iterations', type=int, default=300, help='Maximum iteration')
     parser.add_argument('--learning-rate', type=float, default=0.01, help='Learning rate update')
