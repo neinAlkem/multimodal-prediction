@@ -1,0 +1,30 @@
+name: model-training
+description: Trains the CatBoost model and saves artifacts.
+
+inputs:
+  - {name: train_data, type: String}
+  - {name: test_data, type: String}
+  - {name: iterations, type: Integer, default: 300}
+  - {name: learning_rate, type: Float, default: 0.01}
+  - {name: depth, type: Integer, default: 4}
+  - {name: l2_leaf_reg, type: Integer, default: 3}
+
+outputs:
+  - {name: model_dir, type: String}
+  - {name: metrics_path, type: String}
+
+implementation:
+  container:
+    image: gcr.io/project-big-data-461104/spark-runner:latest 
+    command: [
+      python3,
+      /app/src/model/model_training.py,
+      --train-data, {inputValue: train_data},
+      --test-data, {inputValue: test_data},
+      --model-output-dir, {outputPath: model_dir},
+      --metrics-output-path, {outputPath: metrics_path},
+      --iterations, {inputValue: iterations},
+      --learning-rate, {inputValue: learning_rate},
+      --depth, {inputValue: depth},
+      --l2-leaf-reg, {inputValue: l2_leaf_reg},
+    ]

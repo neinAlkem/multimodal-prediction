@@ -1,0 +1,20 @@
+name: data-preparation
+description: Runs the PySpark job to pre-process final data for model training.
+
+inputs:
+  - {name: input_path, type: String, description: 'GCS path to fused data'}
+
+outputs:
+  - {name: train_output_path, type: String, description: 'GCS path to train data file '}
+  - {name: test_output_path, type: String, description: 'GCS path to test data file'}
+
+implementation:
+  container:
+    image: gcr.io/project-big-data-461104/spark-runner:latest 
+    command: [
+      python3, 
+      /app/src/data_process/data_prep.py,
+      --input-path, {inputValue: input_path},
+      --train-output-path, {outputPath: train_output_path},
+      --test-output-path, {outputPath: test_output_path},
+    ]

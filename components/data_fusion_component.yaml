@@ -1,0 +1,24 @@
+name: data-fusion
+description: Runs the PySpark job to fuse multiple data sources.
+
+inputs:
+  - {name: participant_info, type: String, description: 'GCS path to participant info'}
+  - {name: survey_info, type: String, description: 'GCS path to survey info'}
+  - {name: class_table, type: String, description: 'GCS path to class table'}
+  - {name: wearable_data, type: String, description: 'GCS path to wearable data'}
+
+outputs:
+  - {name: fused_data_path, type: String, description: 'GCS path for the fused output CSV'}
+
+implementation:
+  container:
+    image: gcr.io/project-big-data-461104/spark-runner:latest 
+    command: [
+      python3, 
+      /app/src/data_process/data_fusion.py,
+      --participant-info, {inputValue: participant_info},
+      --survey-info, {inputValue: survey_info},
+      --class-table, {inputValue: class_table},
+      --wearable-data, {inputValue: wearable_data},
+      --output-path, {outputPath: fused_data_path},
+    ]
