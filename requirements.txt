@@ -9,6 +9,5 @@ matplotlib
 seaborn
 fsspec
 gcsfs
-kfp
 google_cloud_pipeline_components
 scikit-learn
