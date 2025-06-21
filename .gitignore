@@ -8,4 +8,5 @@ spark_apps/
 google-cloud-sdk
 .vscode
 catboost_info/
+myenv/
 
