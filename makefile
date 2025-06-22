@@ -12,7 +12,7 @@ TEST_OUTPUT_GCS = gs://project-abd/pipeline/test_data.csv
 MODEL_OUTPUT_DIR_GCS = gs://project-abd/pipeline/
 METRICS_OUTPUT_GCS = gs://project-abd/pipeline/
 
-.PHONY: all initial fusion data_prep train_model clean down
+.PHONY: all initial fusion data_prep train_model down
 
 all: initial fusion data_prep train_model down
 
@@ -65,9 +65,9 @@ train_model:
 		--model-output-dir $(MODEL_OUTPUT_DIR_GCS) \
 		--metric-output-dir $(METRICS_OUTPUT_GCS)
 
-clean:
-	@echo "Cleaning local files..."
-	rm -f fused_data.csv model.cbm evaluation_metrics.json
+# clean:
+# 	@echo "Cleaning local files..."
+# 	rm -f fused_data.csv model.cbm evaluation_metrics.json
 
 down:
 	@echo "Stopping and removing Docker containers and volumes..."
