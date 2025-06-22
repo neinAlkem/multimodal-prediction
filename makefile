@@ -23,7 +23,6 @@ initial:
 	make down; \
 	docker compose up -d --scale spark-worker=3; \
 	pip install -r requirements.txt --break-system-packages; \
-	pip install -r model/requirements.txt --break-system-packages;
 
 fusion:
 	@echo "Running fusion step..."
@@ -44,7 +43,7 @@ fusion:
 data_prep:
 	@echo "Running data preparation step..."
 	@set -e; \
-	docker exec spark-master "spark-submit \
+	docker exec spark-master bash -c "spark-submit \
 		--master spark://spark-master:7077  \
 		--deploy-mode client \
 		--jars https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar \
@@ -59,12 +58,12 @@ data_prep:
 
 train_model:
 	@echo "Running model training and evaluation..."
-	@set -e; \
-	python3 model/script.py \
-  	--train-data $(TRAIN_OUTPUT_GCS) \
-  	--test-data $(TEST_OUTPUT_GCS) \
-  	--model-output-dir $(MODEL_OUTPUT_DIR_GCS) \
-  	--metric-output-dir $(METRICS_OUTPUT_GCS)
+	myenv/Scripts/python.exe -m pip install -r model/requirements.txt && \
+	myenv/Scripts/python.exe model/script.py \
+		--train-data $(TRAIN_OUTPUT_GCS) \
+		--test-data $(TEST_OUTPUT_GCS) \
+		--model-output-dir $(MODEL_OUTPUT_DIR_GCS) \
+		--metric-output-dir $(METRICS_OUTPUT_GCS)
 
 clean:
 	@echo "Cleaning local files..."
