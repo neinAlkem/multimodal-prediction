@@ -110,6 +110,7 @@ def main(args):
     logging.info("Success...")
 
 if __name__ == '__main__':    
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials/credential.json'
     parser = argparse.ArgumentParser()
     parser.add_argument('--train-data', type=str, required=True, help='GCS path to training data.')
     parser.add_argument('--test-data', type=str, required=True, help='GCS path to testing data.')
