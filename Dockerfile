@@ -58,8 +58,7 @@ ENV PYTHONPATH=$SPARK_HOME/python/:$PYTHONPATH
 # Create and copy directory for credentials
 RUN mkdir -p /opt/spark/credentials
 
-# COPY credentials/credential.json /opt/spark/credentials/credential.json
-COPY credentials/credential.json /opt/spark/crendentials/credential.json
+COPY credentials/credential.json /opt/spark/credentials/credential.json
 ENV GOOGLE_APPLICATION_CREDENTIALS=/opt/spark/credentials/credential.json
 
 # Copy the entrypoint script that will start the required services
