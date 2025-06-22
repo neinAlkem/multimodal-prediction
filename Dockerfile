@@ -10,9 +10,12 @@ RUN apt-get update && \
     openjdk-11-jdk \      
     build-essential \     
     software-properties-common \ 
-    ssh && \              
+    python3-setuptools \
+    python3-distutils \
+    python3-pip \
+    ssh && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* 
+    rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
 ENV PATH="$JAVA_HOME/bin:$PATH"
@@ -54,7 +57,10 @@ ENV PYTHONPATH=$SPARK_HOME/python/:$PYTHONPATH
 
 # Create and copy directory for credentials
 RUN mkdir -p /opt/spark/credentials
+
 # COPY credentials/credential.json /opt/spark/credentials/credential.json
+COPY credentials/credential.json /opt/spark/crendentials/credential.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/opt/spark/credentials/credential.json
 
 # Copy the entrypoint script that will start the required services
 COPY start-spark.sh .
