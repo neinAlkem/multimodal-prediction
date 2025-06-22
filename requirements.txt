@@ -8,6 +8,7 @@ numpy
 matplotlib
 seaborn
 fsspec
+setuptools
 gcsfs
 google_cloud_pipeline_components
 scikit-learn
