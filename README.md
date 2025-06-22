@@ -1,20 +1,21 @@
 # A Multimodal Predictive Model of Students’ Affective Responses: Integrating Wearable Sensor Data and Psychological Questionnaires
+Mengintegrasikan data dari sensor wearable dan kuesioner psikologis untuk memprediksi respons afektif siswa secara multimodal menggunakan pipeline berbasis Docker, Spark, dan Google Cloud Platform.
 
 ## Prasyarat
 Sebelum menjalankan pipeline, harap diperhatikan beberapa hal dibawah ini :
-1.  Docker terinstal dan berjalan di lingkungan tempat Anda akan membangun image.
-2.  Google Cloud SDK (`gcloud`) terinstal dan terautentikasi di komputer lokal atau Cloud Shell.
-3.  Akun Google Cloud Service akan menggunakan Service Account yang sudah di atur pada pipeline (Setelah presentasi selesai, Service Account akan dihapus.)
-4.  Path penyimpanan telah diatur sedemikian lupa pada layanan Google Cloud Storage, sehingga tidak perlu melakukan proses tambahan apa-apa.
+1. **Docker** : Terinstal dan berjalan di mesin lokal atau server.
+2. **Google Cloud SDK (gcloud)** : Terinstal dan sudah diautentikasi di mesin lokal atau Cloud Shell.
+3. **Service Account GCP** : File JSON kredensial sudah tersedia di folder credentials/ dan dikonfigurasi di pipeline. ( Catatan: Akun ini akan dihapus setelah presentasi selesai. )
+4. **Google Cloud Storage** : Struktur folder dan bucket sudah disiapkan dan sesuai dengan konfigurasi pipeline.
 
 ## Detail Direktori
-- conf : konfig untuk spark
-- credentials : berisikan file services account GCP
-- data : penyimpanan mounted dari spark image
-- model : file untuk membangun model registry pada GCP
-- notebook : gabungan notebook untuk proses EDA serta tes model
-- spark_apps : penyimpanan mounted untuk script spark
-- terraform : optional untuk membangun infrastruktur GCP
+- **conf/** : konfig untuk spark
+- **credentials/** : berisikan file services account GCP
+- **data/** : penyimpanan mounted dari spark image
+- **model/** : file untuk membangun model registry pada GCP
+- **notebook/** : gabungan notebook untuk proses EDA serta tes model
+- **spark_apps/** : penyimpanan mounted untuk script spark
+- **terraform/** : optional untuk membangun infrastruktur GCP
 
 ## Langkah Memulai
 `Buat virtual envirovment untuk model depedencies`
